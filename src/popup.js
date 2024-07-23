@@ -3,6 +3,13 @@
 import './popup.css';
 
 (function () {
+  document.getElementById('btnShowToken').addEventListener('mousedown', (event) => {
+    document.getElementById('userToken').setAttribute('type', 'text');
+  });
+  document.getElementById('btnShowToken').addEventListener('mouseup', (event) => {
+    document.getElementById('userToken').setAttribute('type', 'password');
+  });
+
   // We will make use of Storage API to get and store `count` value
   // More information on Storage API can we found at
   // https://developer.chrome.com/extensions/storage
