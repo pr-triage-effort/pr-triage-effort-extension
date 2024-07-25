@@ -38,7 +38,7 @@ async function getOrder(token, repo) {
   console.log(prs);
   // console.log(data.artifacts[0].archive_download_url);
 
-  return prs.sort((a, b) => a.effort - b.effort).map((pr) => pr.id);
+  return prs.sort((a, b) => a.effort - b.effort).map((pr) => pr.number);
 }
 
 async function sort(sort, token, repo) {
@@ -64,9 +64,9 @@ async function sort(sort, token, repo) {
 function sortPullRequests(pullRequests, orderList, sort) {
   const pullRequestMap = {};
 
-  // Create a map of pull requests by their IDs
+  // Create a map of pull requests by their numbers
   pullRequests.forEach(pr => {
-    pullRequestMap[pr.id] = pr;
+    pullRequestMap[pr.number] = pr;
   });
 
   console.log('pullRequestMap: ');
