@@ -28,7 +28,7 @@ async function fetchGithubAPI(req, token = null, repoURL = null) {
   const repo = (repoParam || window.location.pathname).split('/').slice(1, 3).join('/');
   console.log(repo);
 
-  const url = `https://api.github.com/repos/${repo}/${req}`;
+  const url = req.includes('zip') ? req : `https://api.github.com/repos/${repo}/${req}`;
 
   const Authorization = `Bearer ${token}`;
 
@@ -45,7 +45,7 @@ async function fetchGithubAPI(req, token = null, repoURL = null) {
       throw new Error(`HTTP error. Status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = req.includes('zip') ? response : response.json();
     console.log(data);
     return data;
   } catch (error) {

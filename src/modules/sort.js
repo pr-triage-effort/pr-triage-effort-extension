@@ -6,70 +6,75 @@ import { replaceHtmlContent } from './pr-ui'
 
 // ORDERING
 
-async function getArtefact() {
+async function getOrder() {
   console.log('artefact: ');
 
-  // const data = await fetchGithubAPI('actions/artifacts', 'TOKEN', 'https://github.com/YanickValiquette/Github-sort-pr-per-effort/');
+  const data = await fetchGithubAPI('actions/artifacts', 'TOKEN');
 
-  let file;
-
-  // https://stuk.github.io/jszip/documentation/examples/get-binary-files-ajax.html
-
-  await fetch('https://api.github.com/repos/pr-triage-effort/pr-triage-effort-action/actions/artifacts/1703300908/zip', {
-    method: 'GET',
-    headers: {
-      'Accept': 'application/vnd.github.v3+json',
-      'Authorization': 'Bearer TOKEN'
-    }
-  }).then(function (response) {
-    if (response.status === 200 || response.status === 0) {
-      return Promise.resolve(response.blob());
-    } else {
-      return Promise.reject(new Error(response.statusText));
-    }
-  })
+  const file = await fetchGithubAPI(data.artifacts[0].archive_download_url, 'TOKEN')
+    .then((response) => {
+      if (response.status === 200 || response.status === 0) {
+        return Promise.resolve(response.blob());
+      } else {
+        return Promise.reject(new Error(response.statusText));
+      }
+    })
     .then(JSZip.loadAsync)
     .then(function (zip) {
       return zip.file("results.json").async("string");
     })
     .then(function success(text) {
       console.log('success');
-      file = text;
+      return text;
     }, function error(e) {
       console.log('error');
-      file = e;
+      return e;
     });
 
-  const result = JSON.parse(file);
+  const prs = JSON.parse(file)
+
 
   console.log('zip url: ');
-  console.log(result);
+  console.log(prs);
   // console.log(data.artifacts[0].archive_download_url);
+
+  return prs.sort((a, b) => a.effort - b.effort).map((pr) => pr.id);
 }
 
-const orderList = [];
-
-async function sortLowest() {
+async function sort(sort) {
   console.log('sortLowest: ');
 
   const data = await fetchGithubAPI('pulls?per_page=25&page=1', 'TOKEN');
 
-  const sortedPullRequests = sortPullRequests(data, orderList).slice(0, 25);
+  const orderList = await getOrder()
+
+  console.log('orderList: ');
+  console.log(orderList);
+
+  const sortedPullRequests = sortPullRequests(data, orderList, sort).slice(0, 25);
+
+  console.log('sortedPullRequests: ');
   console.log(sortedPullRequests)
+
   // Format and replace the HTML content
   replaceHtmlContent(sortedPullRequests);
 }
 
-function sortPullRequests(pullRequests, orderList) {
+function sortPullRequests(pullRequests, orderList, sort) {
   const pullRequestMap = {};
 
   // Create a map of pull requests by their IDs
   pullRequests.forEach(pr => {
-    pullRequestMap[pr.number] = pr;
+    pullRequestMap[pr.id] = pr;
   });
 
+  console.log('pullRequestMap: ');
+  console.log(pullRequestMap);
+
   // Sort pull requests based on the orderList
-  return orderList.map(number => pullRequestMap[number]).filter(pr => pr !== undefined);
+  const sortedPRs = orderList.map((effort) => pullRequestMap[effort]).filter(pr => pr !== undefined);
+
+  return sort === 1 ? sortedPRs.toReversed() : sortedPRs;
 }
 
-export { sortLowest, getArtefact };
+export { sort };

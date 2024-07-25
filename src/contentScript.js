@@ -1,5 +1,5 @@
 'use strict';
-import { sortLowest, getArtefact } from './modules/sort'
+import { sort } from './modules/sort'
 import { addSortOrderOptions } from './modules/button-ui'
 
 // Content script file will run in the context of web page.
@@ -52,10 +52,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 
 addSortOrderOptions('Highest effort', async () => {
-  await getArtefact();
-  await sortLowest();
+  await sort(1);
 });
 addSortOrderOptions('Lowest effort', async () => {
-  await getArtefact();
-  await sortLowest();
+  await sort(0);
 });
