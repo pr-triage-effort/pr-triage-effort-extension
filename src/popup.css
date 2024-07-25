@@ -44,6 +44,7 @@
 
   --h5-size: 0.875rem;
   --control-fgColor-placeholder: #858e98;
+  --overlay-bgColor: #161b22;
 }
 /* css variables ends */
 
@@ -81,6 +82,8 @@ body {
 fieldset {
   border: none;
   margin-bottom: 10px;
+  position: relative;
+  display: inline-block;
 }
 
 .button {
@@ -127,13 +130,12 @@ fieldset {
 
 .form-input {
   padding: 5px 12px;
-  color: var(--fgColor-default, var(--color-fg-default));
   vertical-align: middle;
   background-repeat: no-repeat;
   background-position: right 8px center;
 
   background-color: var(--bgColor-default);
-  border: var(--borderWidth-thin) solid var(--control-borderColor-rest, var(--color-border-default));
+  border: var(--borderWidth-thin) solid var(--control-borderColor-rest);
   border-radius: var(--borderRadius-medium);
   box-shadow: var(--shadow-inset);
   color: var(--fgColor-default);
@@ -148,6 +150,7 @@ fieldset {
   padding-inline: var(--control-large-paddingInline-normal);
 
   margin-top: 6px;
+  text-overflow: ellipsis;
 }
 
 .form-input:not([type=checkbox],[type=radio]):focus:not(:focus-visible) {
@@ -167,6 +170,10 @@ fieldset {
   color: var(--control-fgColor-placeholder);
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+  transition: background-color 0s 600000s, color 0s 600000s !important;
+}
 .input-group {
   display: flex;
 }
@@ -187,4 +194,40 @@ fieldset {
 .button svg {
   fill: var(--fgColor-muted);
   color: var(--fgColor-muted);
+}
+
+/* https://www.w3schools.com/howto/howto_css_tooltip.asp */
+
+fieldset .tooltip {
+  visibility: hidden;
+  width: 120px;
+  background-color: var(--overlay-bgColor);
+  text-align: center;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid var(--control-borderColor-rest);
+
+  position: absolute;
+  z-index: 1;
+  bottom: 75%;
+  right: 0%;
+
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+fieldset .tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: var(--control-borderColor-rest) transparent transparent transparent;
+}
+
+fieldset:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
 }

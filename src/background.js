@@ -5,7 +5,6 @@
 // For more information on background script,
 // See https://developer.chrome.com/extensions/background_pages
 
-/*
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'GREETINGS') {
@@ -21,11 +20,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-*/
-
 async function fetchGithubAPI(req, token = null, repoURL = null) {
   const repoParam = repoURL ? new URL(repoURL).pathname : null;
-  const repo = (repoParam || window.location.pathname).split('/').slice(1, 3).join('/');
+  const repo = (((repoParam && req.includes('actions')) ? repoParam : window.location.pathname)).split('/').slice(1, 3).join('/');
   console.log(repo);
 
   const url = req.includes('zip') ? req : `https://api.github.com/repos/${repo}/${req}`;

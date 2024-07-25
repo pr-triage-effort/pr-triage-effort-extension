@@ -13,13 +13,14 @@ import { addSortOrderOptions } from './modules/button-ui'
 // For more information on Content Scripts,
 // See https://developer.chrome.com/extensions/content_scripts
 
-/*
 
 // Log `title` of current active web page
-const pageTitle = document.head.getElementsByTagName('title')[0].innerHTML;
-console.log(
-  `Page title is: '${pageTitle}' - evaluated by Chrome extension's 'contentScript.js' file`
-);
+// const pageTitle = document.head.getElementsByTagName('title')[0].innerHTML;
+// console.log(
+//   `Page title is: '${pageTitle}' - evaluated by Chrome extension's 'contentScript.js' file`
+// );
+let token = null;
+let repo = null;
 
 // Communicate with background file by sending a message
 chrome.runtime.sendMessage(
@@ -36,8 +37,14 @@ chrome.runtime.sendMessage(
 
 // Listen for message
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'COUNT') {
-    console.log(`Current count is ${request.payload.count}`);
+  if (request.type === 'TOKEN') {
+    token = request.payload.token;
+    console.log(`Current token is ${token}`);
+  }
+
+  if (request.type === 'REPO') {
+    repo = request.payload.repo;
+    console.log(`Current repo is ${repo}`);
   }
 
   // Send an empty response
@@ -46,14 +53,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
-*/
 
 // UI
 
 
 addSortOrderOptions('Highest effort', async () => {
-  await sort(1);
+  await sort(1, token, repo);
 });
 addSortOrderOptions('Lowest effort', async () => {
-  await sort(0);
+  await sort(0, token, repo);
 });

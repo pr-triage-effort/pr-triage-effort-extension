@@ -6,12 +6,12 @@ import { replaceHtmlContent } from './pr-ui'
 
 // ORDERING
 
-async function getOrder() {
+async function getOrder(token, repo) {
   console.log('artefact: ');
 
-  const data = await fetchGithubAPI('actions/artifacts', 'TOKEN');
+  const data = await fetchGithubAPI('actions/artifacts', token, repo);
 
-  const file = await fetchGithubAPI(data.artifacts[0].archive_download_url, 'TOKEN')
+  const file = await fetchGithubAPI(data.artifacts[0].archive_download_url, token)
     .then((response) => {
       if (response.status === 200 || response.status === 0) {
         return Promise.resolve(response.blob());
@@ -41,12 +41,12 @@ async function getOrder() {
   return prs.sort((a, b) => a.effort - b.effort).map((pr) => pr.id);
 }
 
-async function sort(sort) {
-  console.log('sortLowest: ');
+async function sort(sort, token, repo) {
+  console.log('sort: ');
 
-  const data = await fetchGithubAPI('pulls?per_page=25&page=1', 'TOKEN');
+  const data = await fetchGithubAPI('pulls?per_page=25&page=1', token);
 
-  const orderList = await getOrder()
+  const orderList = await getOrder(token, repo)
 
   console.log('orderList: ');
   console.log(orderList);
@@ -56,6 +56,7 @@ async function sort(sort) {
   console.log('sortedPullRequests: ');
   console.log(sortedPullRequests)
 
+  //TODO: Implement fallback when no IDs match
   // Format and replace the HTML content
   replaceHtmlContent(sortedPullRequests);
 }

@@ -17,16 +17,17 @@ import './popup.css';
   // To get storage access, we have to mention it in `permissions` property of manifest.json file
   // More information on Permissions can we found at
   // https://developer.chrome.com/extensions/declare_permissions
-  const counterStorage = {
-    get: (cb) => {
-      chrome.storage.sync.get(['count'], (result) => {
-        cb(result.count);
+
+  const infoStorage = {
+    get: (key, cb) => {
+      chrome.storage.sync.get([key], (result) => {
+        cb(result[key]);
       });
     },
-    set: (value, cb) => {
+    set: (key, value, cb) => {
       chrome.storage.sync.set(
         {
-          count: value,
+          [key]: value
         },
         () => {
           cb();
@@ -35,74 +36,99 @@ import './popup.css';
     },
   };
 
-  function setupCounter(initialValue = 0) {
-    document.getElementById('counter').innerHTML = initialValue;
 
-    document.getElementById('incrementBtn').addEventListener('click', () => {
-      updateCounter({
-        type: 'INCREMENT',
-      });
-    });
+  function setupInfo(type, value) {
+    const tokenEl = document.getElementById('userToken');
+    const repoEl = document.getElementById('userRepo');
 
-    document.getElementById('decrementBtn').addEventListener('click', () => {
-      updateCounter({
-        type: 'DECREMENT',
-      });
-    });
+    if (type === 'TOKEN') {
+      tokenEl.value = value;
+    } else {
+      repoEl.value = value;
+    }
+
+    console.log("type: " + type);
+    console.log("value: " + value)
   }
 
-  function updateCounter({ type }) {
-    counterStorage.get((count) => {
-      let newCount;
+  function updateInfo({ token, repo }) {
+    infoStorage.set('token', token, () => {
+      // Communicate with content script of
+      // active tab by sending a message
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs[0];
 
-      if (type === 'INCREMENT') {
-        newCount = count + 1;
-      } else if (type === 'DECREMENT') {
-        newCount = count - 1;
-      } else {
-        newCount = count;
-      }
-
-      counterStorage.set(newCount, () => {
-        document.getElementById('counter').innerHTML = newCount;
-
-        // Communicate with content script of
-        // active tab by sending a message
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          const tab = tabs[0];
-
-          chrome.tabs.sendMessage(
-            tab.id,
-            {
-              type: 'COUNT',
-              payload: {
-                count: newCount,
-              },
+        chrome.tabs.sendMessage(
+          tab.id,
+          {
+            type: 'TOKEN',
+            payload: {
+              token: token,
             },
-            (response) => {
-              console.log('Current count value passed to contentScript file');
-            }
-          );
-        });
+          },
+          (response) => {
+            console.log('Current token value passed to contentScript file');
+          }
+        );
       });
     });
+
+    infoStorage.set('repo', repo, () => {
+      // Communicate with content script of
+      // active tab by sending a message
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs[0];
+
+        chrome.tabs.sendMessage(
+          tab.id,
+          {
+            type: 'REPO',
+            payload: {
+              repo: repo,
+            },
+          },
+          (response) => {
+            console.log('Current token value passed to contentScript file');
+          }
+        );
+      });
+    });
+
+    console.log(token + ' // ' + repo);
   }
 
-  function restoreCounter() {
-    // Restore count value
-    counterStorage.get((count) => {
-      if (typeof count === 'undefined') {
-        // Set counter value as 0
-        counterStorage.set(0, () => {
-          setupCounter(0);
+  function restoreInfo() {
+    infoStorage.get('token', (token) => {
+      if (typeof token === 'undefined') {
+        infoStorage.set('token', null, () => {
+          setupInfo('TOKEN', null);
+          console.log('im here tok null');
         });
       } else {
-        setupCounter(count);
+        setupInfo('TOKEN', token);
       }
+    });
+
+    infoStorage.get('repo', (repo) => {
+      if (typeof repo === 'undefined') {
+        infoStorage.set('repo', null, () => {
+          setupInfo('REPO', null);
+          console.log('im here tok null');
+        });
+      } else {
+        setupInfo('REPO', repo);
+      }
+    });
+
+    document.getElementById('userForm').addEventListener('submit', (event) => {
+      const tokenEl = document.getElementById('userToken');
+      const repoEl = document.getElementById('userRepo');
+
+      updateInfo({ token: tokenEl.value, repo: repoEl.value });
     });
   }
 
-  document.addEventListener('DOMContentLoaded', restoreCounter);
+  document.addEventListener('DOMContentLoaded', restoreInfo);
 
   // Communicate with background file by sending a message
   chrome.runtime.sendMessage(
