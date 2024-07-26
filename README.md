@@ -7,6 +7,9 @@ This extension allows users to change the view of GitHub Pull Requests list in o
 - Feature 1
 - Feature 2
 
+TODO : Référer comment générer un token et dire quels permissions sont nécessaire. Expliquer pourquoi on a besoin de ces permissions.
+
+
 ## Install
 
 [**Chrome** extension]() <!-- TODO: Add chrome extension link inside parenthesis -->
