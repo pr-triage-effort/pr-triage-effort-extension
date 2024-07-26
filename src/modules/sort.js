@@ -42,12 +42,6 @@ async function getOrder(token, repo) {
 }
 
 async function sort(sort, token, repo) {
-  if (token == null) {
-    alert("For using the custom sort options, you must define your personal access token in the extension options page." +
-      "\n\n See documentation for further information : \n https://github.com/pr-triage-effort/pr-triage-effort-extension/blob/main/README.md")
-    console.log('No token found for the sort.');
-    return;
-  }
 
   console.log('sort: ');
 
