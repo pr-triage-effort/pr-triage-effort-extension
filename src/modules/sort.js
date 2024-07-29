@@ -34,8 +34,8 @@ async function getOrder(token, repo) {
   const prs = JSON.parse(file)
 
 
-  console.log('zip url: ');
-  console.log(prs);
+  //console.log('zip url: ');
+  //console.log(prs);
   // console.log(data.artifacts[0].archive_download_url);
 
   return prs.sort((a, b) => a.effort - b.effort).map((pr) => pr.number);
@@ -49,13 +49,13 @@ async function sort(sort, token, repo) {
 
   const orderList = await getOrder(token, repo)
 
-  console.log('orderList: ');
-  console.log(orderList);
+  //console.log('orderList: ');
+  //console.log(orderList);
 
   const sortedPullRequests = sortPullRequests(data, orderList, sort).slice(0, 25);
 
-  console.log('sortedPullRequests: ');
-  console.log(sortedPullRequests)
+  //console.log('sortedPullRequests: ');
+  //console.log(sortedPullRequests)
 
   if (sortedPullRequests.length != 0) {
     replaceHtmlContent(sortedPullRequests);
@@ -72,8 +72,8 @@ function sortPullRequests(pullRequests, orderList, sort) {
     pullRequestMap[pr.number] = pr;
   });
 
-  console.log('pullRequestMap: ');
-  console.log(pullRequestMap);
+  //console.log('pullRequestMap: ');
+  //console.log(pullRequestMap);
 
   // Sort pull requests based on the orderList
   const sortedPRs = orderList.map((effort) => pullRequestMap[effort]).filter(pr => pr !== undefined);

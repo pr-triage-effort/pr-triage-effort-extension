@@ -47,8 +47,8 @@ import './popup.css';
       repoEl.value = value;
     }
 
-    console.log("type: " + type);
-    console.log("value: " + value)
+    //console.log("type: " + type);
+    //console.log("value: " + value)
   }
 
   function updateInfo({ token, repo }) {
@@ -94,7 +94,7 @@ import './popup.css';
       });
     });
 
-    console.log(token + ' // ' + repo);
+    //console.log(token + ' // ' + repo);
   }
 
   function restoreInfo() {
@@ -130,16 +130,4 @@ import './popup.css';
 
   document.addEventListener('DOMContentLoaded', restoreInfo);
 
-  // Communicate with background file by sending a message
-  chrome.runtime.sendMessage(
-    {
-      type: 'GREETINGS',
-      payload: {
-        message: 'Hello, my name is Pop. I am from Popup.',
-      },
-    },
-    (response) => {
-      console.log(response.message);
-    }
-  );
 })();

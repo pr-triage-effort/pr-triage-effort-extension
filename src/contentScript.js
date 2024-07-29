@@ -14,37 +14,19 @@ import { addSortOrderOptions } from './modules/button-ui'
 // See https://developer.chrome.com/extensions/content_scripts
 
 
-// Log `title` of current active web page
-// const pageTitle = document.head.getElementsByTagName('title')[0].innerHTML;
-// console.log(
-//   `Page title is: '${pageTitle}' - evaluated by Chrome extension's 'contentScript.js' file`
-// );
 let token = null;
 let repo = null;
-
-// Communicate with background file by sending a message
-chrome.runtime.sendMessage(
-  {
-    type: 'GREETINGS',
-    payload: {
-      message: 'Hello, my name is Con. I am from ContentScript.',
-    },
-  },
-  (response) => {
-    console.log(response.message);
-  }
-);
 
 // Listen for message
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'TOKEN') {
     token = request.payload.token;
-    console.log(`Current token is ${token}`);
+    //console.log(`Current token is ${token}`);
   }
 
   if (request.type === 'REPO') {
     repo = request.payload.repo;
-    console.log(`Current repo is ${repo}`);
+    //console.log(`Current repo is ${repo}`);
   }
 
   // Send an empty response

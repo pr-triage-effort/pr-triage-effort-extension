@@ -5,25 +5,10 @@
 // For more information on background script,
 // See https://developer.chrome.com/extensions/background_pages
 
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'GREETINGS') {
-    const message = `Hi ${sender.tab ? 'Con' : 'Pop'
-      }, my name is Bac. I am from Background. It's great to hear from you.`;
-
-    // Log message coming from the `request` parameter
-    console.log(request.payload.message);
-    // Send a response message
-    sendResponse({
-      message,
-    });
-  }
-});
-
 async function fetchGithubAPI(req, token = null, repoURL = null) {
   const repoParam = repoURL ? new URL(repoURL).pathname : null;
   const repo = (((repoParam && req.includes('actions')) ? repoParam : window.location.pathname)).split('/').slice(1, 3).join('/');
-  console.log(repo);
+  //console.log(repo);
 
   const url = req.includes('zip') ? req : `https://api.github.com/repos/${repo}/${req}`;
 
@@ -43,7 +28,7 @@ async function fetchGithubAPI(req, token = null, repoURL = null) {
     }
 
     const data = req.includes('zip') ? response : response.json();
-    console.log(data);
+    //console.log(data);
     return data;
   } catch (error) {
     console.error('Failed to fetch pull requests:', error);
