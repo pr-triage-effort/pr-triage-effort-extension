@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Pr Triage Effort Extension",
+  "version": "0.1.0",
+  "description": "This extension allows users to change the view of GitHub Pull Request list in order to show the one needing the least effort to be merged. It needs to have the GitHub Action [...] enabled in order to work properly. This extension is the fruit of an end of study project.",
+  "icons": {
+    "16": "icons/icon_16.png",
+    "32": "icons/icon_32.png",
+    "48": "icons/icon_48.png",
+    "128": "icons/icon_128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "PRs Triage Per Effort",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://github.com/*/*/pulls*"
+      ],
+      "run_at": "document_idle",
+      "js": [
+        "contentScript.js"
+      ]
+    }
+  ]
+}
