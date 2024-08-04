@@ -125,9 +125,21 @@ function generateHtmlFromJson(pr) {
                 </div>
             </div>
             <div class="flex-shrink-0 col-4 col-md-3 pt-2 text-right pr-3 no-wrap d-flex hide-sm ">
-                <span class="ml-2 flex-1 flex-shrink-0"></span>
-            ${assignees.length > 0 ? `
                 <span class="ml-2 flex-1 flex-shrink-0">
+                    ${pr.linkedIssue > 0 ? `
+                    <span class="tooltipped tooltipped-sw tooltipped-multiline tooltipped-align-right-1 mt-1" aria-label="${pr.linkedIssue} linked issues">
+                        <span class="color-fg-muted" aria-label="${pr.linkedIssue} issues">
+                              <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-issue-opened v-align-middle">
+                                  <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path><path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z"></path>
+                              </svg>
+                              <span class="text-small text-bold">${pr.linkedIssue} </span>
+                            </span>
+                        </span>
+                    `: ''}
+                </span>
+                <!-- Asignees icons -->
+                <span class="ml-2 flex-1 flex-shrink-0">
+                    ${assignees.length > 0 ? `
                     <div class="AvatarStack AvatarStack--right ml-2 flex-1 flex-shrink-0">
                         <div class="AvatarStack-body tooltipped tooltipped-sw tooltipped-multiline tooltipped-align-right-1 mt-1" aria-label="Assigned to ${assignees.map(assignee => assignee.username).join(' and ')}">
                             ${assignees.map(assignee => `
@@ -135,9 +147,9 @@ function generateHtmlFromJson(pr) {
                                 <img class="from-avatar avatar-user" src="${assignee.avatar_url}" width="20" height="20" alt="@${assignee.username}">
                             </a>`).join('')}
                         </div>
-                    </div>
-                </span>` : ''}
-                <!-- Number Of Comments goes in the span bellow -->
+                    </div>` : ''}
+                </span>
+                <!-- Number Of Comments -->
                 <span class="ml-2 flex-1 flex-shrink-0">
                     ${pr.comments > 0 ? `
                     <a href="${pr.html_url}" class="Link--muted" aria-label="1 comment" data-turbo-frame="repo-content-turbo-frame">

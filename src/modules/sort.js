@@ -1,7 +1,7 @@
 'use strict';
 
 const JSZip = require("jszip");
-import { fetchGithubAPI } from '../background'
+import { fetchGithubAPI, getLinkedIssueWithGraphQL } from '../background'
 import { replaceHtmlContent } from './pr-ui'
 
 // ORDERING
@@ -55,18 +55,25 @@ async function sort(sort, token, repo) {
 async function fetchPRDetails(pr, token, repo) {
   if (token) {
     try {
+      // Add details about the status of the PR for the check
       let result = await fetchGithubAPI(`commits/${pr.head.sha}/check-suites`, token, repo);
       if (result.total_count > 0 && result.check_suites[0].conclusion) {
         pr.status = result.check_suites[0].conclusion;
       } else {
         pr.status = "Unknown";
       }
+      // Add details about the number of comments and reviews, wich cumulated gives the 
       const reviewResult = await fetchGithubAPI(`pulls/${pr.number}/reviews`, token, repo);
       result = await fetchGithubAPI(`pulls/${pr.number}`, token, repo);
 
       const comments = result.comments;
 
       pr.comments = reviewResult.filter(review => !(review.state === "APPROVED" && review.body === "")).length + Number(comments);
+
+      // Add details about the linked issue
+      result = await getLinkedIssueWithGraphQL(pr.number, token, repo);
+      pr.linkedIssue = result.data.repository.pullRequest.closingIssuesReferences.nodes.length;
+
     } catch (error) {
       console.error(`Failed to fetch check-suites for PR ${pr.number}:`, error);
       pr.status = "Unknown";

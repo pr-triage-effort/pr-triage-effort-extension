@@ -34,5 +34,49 @@ async function fetchGithubAPI(req, token = null, repoURL = null) {
     console.error('Failed to fetch pull requests:', error);
   }
 };
+async function getLinkedIssueWithGraphQL(pullRequestNumber, token, repoURL = null) {
+  const repoParam = repoURL ? new URL(repoURL).pathname : null;
 
-export { fetchGithubAPI };
+  const [repositoryOwner, repositoryName] = (((repoParam && req.includes('actions')) ? repoParam : window.location.pathname)).split('/').slice(1, 3);
+
+  const query = `
+    query {
+      repository(owner: "${repositoryOwner}", name: "${repositoryName}") {
+        pullRequest(number: ${pullRequestNumber}) {
+          closingIssuesReferences(first: 100) {
+            nodes {
+              id
+            }
+          }
+        }
+      }
+    }
+  `;
+  
+  const data = await fetchPullRequestDetails(query, token);
+  return data;
+}
+async function fetchPullRequestDetails(query, token) {
+  const response = await fetch('https://api.github.com/graphql', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ query })
+  });
+
+
+  if (!response.ok) {
+    throw new Error(`GraphQL request failed: ${response.statusText}`);
+  }
+
+  const result = await response.json();
+  if (result.errors) {
+    throw new Error(`GraphQL error: ${result.errors.map(error => error.message).join(', ')}`);
+  }
+
+  return result;
+}
+
+export { fetchGithubAPI, getLinkedIssueWithGraphQL };
