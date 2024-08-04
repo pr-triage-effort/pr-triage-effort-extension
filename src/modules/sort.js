@@ -70,6 +70,9 @@ async function fetchPRDetails(pr, token, repo) {
       } else {
         pr.status = "Unknown";
       }
+      const reviews = await fetchGithubAPI(`pulls/${pr.number}/reviews`, token, repo).length;
+      const comments = await fetchGithubAPI(`pulls/${pr.number}`, token, repo).comments;
+      pr.comments = reviews + comments;
     } catch (error) {
       console.error(`Failed to fetch check-suites for PR ${pr.number}:`, error);
       pr.status = "Unknown";
