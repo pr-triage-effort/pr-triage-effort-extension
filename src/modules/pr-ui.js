@@ -46,6 +46,23 @@ function generateHtmlFromJson(pr) {
     };
   });
 
+  const buildStatusHtml = pr.status === "success" ? `
+    <details class="commit-build-statuses details-overlay details-reset js-dropdown-details hx_dropdown-fullscreen js-socket-channel js-updatable-content">
+        <summary class="color-fg-success">
+            <svg aria-label="15 / 15 checks OK" role="img" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-check">
+                <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path>
+            </svg>
+        </summary>
+    </details>` : pr.status === "failure" ? `
+    <details class="commit-build-statuses details-overlay details-reset js-dropdown-details hx_dropdown-fullscreen js-socket-channel js-updatable-content">
+        <summary class="color-fg-danger">
+            <svg aria-label="11 / 15 checks OK" role="img" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-x">
+                <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"></path>
+            </svg>
+        </summary>
+    </details>` : '';
+
+
   return `
     <div id="issue_${issueNumber}" class="Box-row Box-row--focus-gray p-0 mt-0 js-navigation-item js-issue-row" data-id="${pr.id}" data-pjax="#repo-content-pjax-container" data-turbo-frame="repo-content-turbo-frame">
         <div class="d-flex Box-row--drag-hide position-relative">
@@ -56,14 +73,19 @@ function generateHtmlFromJson(pr) {
             <!-- Pull Request icon column -->
             <div class="flex-shrink-0 pt-2 pl-3">
                 <span class="tooltipped tooltipped-e" aria-label="Open Pull Request">
+                    ${pr.draft == false ? `
                     <svg class="octicon octicon-git-pull-request color-fg-open" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z"></path></svg>
-                </span>
+                    ` : `
+                      < svg class="octicon octicon-git-pull-request-draft color-fg-muted" viewBox = "0 0 16 16" version = "1.1" width = "16" height = "16" aria - hidden="true" > <path d="M3.25 1A2.25 2.25 0 0 1 4 5.372v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.251 2.251 0 0 1 3.25 1Zm9.5 14a2.25 2.25 0 1 1 0-4.5 2.25 2.25 0 0 1 0 4.5ZM2.5 3.25a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0ZM3.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm9.5 0a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM14 7.5a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0Zm0-4.25a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0Z"></path></svg >
+                    `}
+                    </span>
             </div>
             <!-- Issue title column -->
             <div class="flex-auto min-width-0 p-2 pr-3 pr-md-2">
                 <!-- Title -->
                 <a id="issue_${issueNumber}_link" class="Link--primary v-align-middle no-underline h4 js-navigation-open markdown-title" data-hovercard-type="pull_request" data-hovercard-url="/user/repo/pull/${issueNumber}/hovercard" href="/user/repo/pull/${issueNumber}" data-turbo-frame="repo-content-turbo-frame">${title}</a>
-                <!-- BUILD STATUS WOULD GO HERE! -->
+                <!-- BUILD STATUS -->
+                ${buildStatusHtml}
                 <!-- Labels -->
                 ${labels.length > 0 ? `
                 <span class="lh-default d-block d-md-inline">
@@ -103,6 +125,10 @@ function generateHtmlFromJson(pr) {
                             </span>
                         </a>
                     </span>` : ''}
+                    <!-- Efforts -->
+                    <span class="d-none d-md-inline-flex ml-2">
+                        Estimated effort to merge : ${pr.effort}
+                    </span>
                 </div>
             </div>
             <div class="flex-shrink-0 col-4 col-md-3 pt-2 text-right pr-3 no-wrap d-flex hide-sm ">

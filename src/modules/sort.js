@@ -34,28 +34,22 @@ async function getOrder(token, repo) {
   const prs = JSON.parse(file)
 
 
-  //console.log('zip url: ');
-  //console.log(prs);
-  // console.log(data.artifacts[0].archive_download_url);
+  console.log('zip url: ');
+  console.log(prs);
+   console.log(data.artifacts[0].archive_download_url);
 
-  return prs.sort((a, b) => a.effort - b.effort).map((pr) => pr.number);
+  return prs.sort((a, b) => a.effort - b.effort).map((pr) => {
+    return { number: pr.number, effort: pr.effort };
+  });
 }
 
 async function sort(sort, token, repo) {
 
-  console.log('sort: ');
-
-  const data = await fetchGithubAPI('pulls?per_page=25&page=1', token);
+  const data = await fetchGithubAPI('pulls?per_page=500', token);
 
   const orderList = await getOrder(token, repo)
 
-  //console.log('orderList: ');
-  //console.log(orderList);
-
-  const sortedPullRequests = sortPullRequests(data, orderList, sort).slice(0, 25);
-
-  //console.log('sortedPullRequests: ');
-  //console.log(sortedPullRequests)
+  const sortedPullRequests = await sortPullRequests(data, orderList, sort, token, repo).slice(0, 25);
 
   if (sortedPullRequests.length != 0) {
     replaceHtmlContent(sortedPullRequests);
@@ -64,7 +58,29 @@ async function sort(sort, token, repo) {
   }
 }
 
-function sortPullRequests(pullRequests, orderList, sort) {
+async function fetchPRDetails(pr, token, repo) {
+  if (token) {
+    try {
+      console.log("Fetching check-suites for PR", pr.number, "with sha", pr.head.sha);
+      const result = await fetchGithubAPI(`commits/${pr.head.sha}/check-suites`, token, repo);
+      console.log("Result from the check-suites API:\n", result);
+      if (result.total_count > 0 && result.check_suites[0].conclusion) {
+        pr.status = result.check_suites[0].conclusion;
+        console.log("Status of PR", pr.number, "is", pr.status);
+      } else {
+        pr.status = "Unknown";
+      }
+    } catch (error) {
+      console.error(`Failed to fetch check-suites for PR ${pr.number}:`, error);
+      pr.status = "Unknown";
+    }
+  } else {
+    pr.status = "Unknown";
+  }
+  return pr;
+}
+
+async function sortPullRequests(pullRequests, orderList, sort, token, repo) {
   const pullRequestMap = {};
 
   // Create a map of pull requests by their numbers
@@ -72,13 +88,26 @@ function sortPullRequests(pullRequests, orderList, sort) {
     pullRequestMap[pr.number] = pr;
   });
 
-  //console.log('pullRequestMap: ');
-  //console.log(pullRequestMap);
-
   // Sort pull requests based on the orderList
-  const sortedPRs = orderList.map((effort) => pullRequestMap[effort]).filter(pr => pr !== undefined);
+  const sortedPRs = await Promise.all(orderList.map(async (order) => {
+    let pr = pullRequestMap[order.number];
+    if (pr) {
+      try {
+        pr = await fetchPRDetails(pr, token, repo);
+        return { ...pr, effort: Number(order.effort.toFixed(3)) };
+      } catch (error) {
+        console.error(`Failed to fetch details for PR ${pr.number}:`, error);
+        return undefined;
+      }
+    } else {
+      console.warn(`No pull request found for number ${order.number}`);
+      return undefined;
+    }
+  })).filter(pr => pr !== undefined);
 
-  return sort === 1 ? sortedPRs.toReversed() : sortedPRs;
+  console.log("Sorted PRs:", sortedPRs);
+
+  return sort === 1 ? sortedPRs.reverse() : sortedPRs;
 }
 
 export { sort };
