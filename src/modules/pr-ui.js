@@ -21,7 +21,6 @@ function generateHtmlFromJson(pr) {
   const title = pr.title;
   const createdAt = pr.created_at;
   const author = pr.user.login;
-  const commentsCount = pr.comments;
   const milestone = pr.milestone;
   const assignees = pr.assignees.map(assignee => {
     return {
@@ -105,14 +104,8 @@ function generateHtmlFromJson(pr) {
                         #${issueNumber} opened <relative-time datetime="${createdAt}" class="no-wrap" title="${new Date(createdAt).toLocaleString()}">${new Date(createdAt).toLocaleDateString()}</relative-time> by
                         <a class="Link--muted" title="Open pull requests created by ${author}" data-hovercard-type="user" data-hovercard-url="/users/${author}/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="/user/repo/issues?q=is%3Apr+is%3Aopen+author%3A${author}" data-turbo-frame="repo-content-turbo-frame">${author}</a>
                     </span>
-                <!-- Review Status -->
-                    ${commentsCount > 0 ? `
-                    <span class="d-none d-md-inline-flex">
-                        <span class="tooltipped tooltipped-s" aria-label="${commentsCount} comments">
-                            <svg class="octicon octicon-comment v-align-middle" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M1.75 2.5a.25.25 0 0 0-.25.25v7a.25.25 0 0 0 .25.25H3v1.15a.1.1 0 0 0 .162.084L5.85 10H14.25a.25.25 0 0 0 .25-.25v-7a.25.25 0 0 0-.25-.25H1.75ZM.5 2.75C.5 1.784 1.284 1 2.25 1h11.5c.966 0 1.75.784 1.75 1.75v7c0 .966-.784 1.75-1.75 1.75H6.175l-3.516 2.635A1.1 1.1 0 0 1 1 10.65V9.5h-1A1.75 1.75 0 0 1 .5 2.75Z"></path></svg>
-                            ${commentsCount}
-                        </span>
-                    </span>` : ''}
+                <!-- TODO : Review Status -->
+              
                  <!-- Milestone -->
                     ${pr.milestone != null ? `
                     <span class="issue-meta-section css-truncate issue-milestone ml-2 d-none d-md-inline">
@@ -145,7 +138,15 @@ function generateHtmlFromJson(pr) {
                     </div>
                 </span>` : ''}
                 <!-- Number Of Comments goes in the span bellow -->
-                <span class="ml-2 flex-1 flex-shrink-0"></span>
+                <span class="ml-2 flex-1 flex-shrink-0">
+                    ${pr.comments > 0 ? `
+                    <a href="${pr.html_url}" class="Link--muted" aria-label="1 comment" data-turbo-frame="repo-content-turbo-frame">
+                        <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-comment v-align-middle">
+                          <path d="M1 2.75C1 1.784 1.784 1 2.75 1h10.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0 1 13.25 12H9.06l-2.573 2.573A1.458 1.458 0 0 1 4 13.543V12H2.75A1.75 1.75 0 0 1 1 10.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h4.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path>
+                        </svg>
+                        <span class="text-small text-bold">${pr.comments}</span>
+                      </a>` : ''}
+                </span>
             </div>
             <a class="d-block d-md-none position-absolute top-0 bottom-0 left-0 right-0" aria-label="${title}" href="/user/repo/pull/${issueNumber}" data-turbo-frame="repo-content-turbo-frame"></a>
         </div>

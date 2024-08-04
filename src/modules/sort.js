@@ -7,8 +7,6 @@ import { replaceHtmlContent } from './pr-ui'
 // ORDERING
 
 async function getOrder(token, repo) {
-  console.log('artefact: ');
-
   const data = await fetchGithubAPI('actions/artifacts', token, repo);
 
   const file = await fetchGithubAPI(data.artifacts[0].archive_download_url, token)
@@ -33,11 +31,6 @@ async function getOrder(token, repo) {
 
   const prs = JSON.parse(file)
 
-
-  console.log('zip url: ');
-  console.log(prs);
-   console.log(data.artifacts[0].archive_download_url);
-
   return prs.sort((a, b) => a.effort - b.effort).map((pr) => {
     return { number: pr.number, effort: pr.effort };
   });
@@ -49,7 +42,8 @@ async function sort(sort, token, repo) {
 
   const orderList = await getOrder(token, repo)
 
-  const sortedPullRequests = await sortPullRequests(data, orderList, sort, token, repo).slice(0, 25);
+  let sortedPullRequests = await sortPullRequests(data, orderList, sort, token, repo);
+  sortedPullRequests = sortedPullRequests.slice(0, 25);
 
   if (sortedPullRequests.length != 0) {
     replaceHtmlContent(sortedPullRequests);
@@ -61,18 +55,18 @@ async function sort(sort, token, repo) {
 async function fetchPRDetails(pr, token, repo) {
   if (token) {
     try {
-      console.log("Fetching check-suites for PR", pr.number, "with sha", pr.head.sha);
-      const result = await fetchGithubAPI(`commits/${pr.head.sha}/check-suites`, token, repo);
-      console.log("Result from the check-suites API:\n", result);
+      let result = await fetchGithubAPI(`commits/${pr.head.sha}/check-suites`, token, repo);
       if (result.total_count > 0 && result.check_suites[0].conclusion) {
         pr.status = result.check_suites[0].conclusion;
-        console.log("Status of PR", pr.number, "is", pr.status);
       } else {
         pr.status = "Unknown";
       }
-      const reviews = await fetchGithubAPI(`pulls/${pr.number}/reviews`, token, repo).length;
-      const comments = await fetchGithubAPI(`pulls/${pr.number}`, token, repo).comments;
-      pr.comments = reviews + comments;
+      const reviewResult = await fetchGithubAPI(`pulls/${pr.number}/reviews`, token, repo);
+      result = await fetchGithubAPI(`pulls/${pr.number}`, token, repo);
+
+      const comments = result.comments;
+
+      pr.comments = reviewResult.filter(review => !(review.state === "APPROVED" && review.body === "")).length + Number(comments);
     } catch (error) {
       console.error(`Failed to fetch check-suites for PR ${pr.number}:`, error);
       pr.status = "Unknown";
@@ -92,7 +86,7 @@ async function sortPullRequests(pullRequests, orderList, sort, token, repo) {
   });
 
   // Sort pull requests based on the orderList
-  const sortedPRs = await Promise.all(orderList.map(async (order) => {
+  let sortedPRs = await Promise.all(orderList.map(async (order) => {
     let pr = pullRequestMap[order.number];
     if (pr) {
       try {
@@ -106,9 +100,8 @@ async function sortPullRequests(pullRequests, orderList, sort, token, repo) {
       console.warn(`No pull request found for number ${order.number}`);
       return undefined;
     }
-  })).filter(pr => pr !== undefined);
-
-  console.log("Sorted PRs:", sortedPRs);
+  }));
+  sortedPRs = sortedPRs.filter(pr => pr !== undefined);
 
   return sort === 1 ? sortedPRs.reverse() : sortedPRs;
 }
