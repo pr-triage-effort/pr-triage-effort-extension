@@ -16,12 +16,24 @@ function replaceHtmlContent(pullRequests) {
   }
 }
 
+function getEffortColor(effort) {
+  if (effort > 0.75) {
+    return 'green';
+  } else if (effort > 0.25) {
+    return 'yellow';
+  } else {
+    return 'red';
+  }
+}
+
 function generateHtmlFromJson(pr) {
   const issueNumber = pr.number;
   const title = pr.title;
   const createdAt = pr.created_at;
   const author = pr.user.login;
   const milestone = pr.milestone;
+  const effortColor = getEffortColor(pr.effort);
+
   const assignees = pr.assignees.map(assignee => {
     return {
       username: assignee.login,
@@ -120,7 +132,7 @@ function generateHtmlFromJson(pr) {
                     </span>` : ''}
                     <!-- Efforts -->
                     <span class="d-none d-md-inline-flex ml-2">
-                        Estimated effort to merge : ${pr.effort}
+                        Review priority : <span style="color:${effortColor};"> ${pr.effort} </span>
                     </span>
                 </div>
             </div>
