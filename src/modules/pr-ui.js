@@ -31,8 +31,8 @@ function generateHtmlFromJson(pr) {
   const title = pr.title;
   const createdAt = pr.created_at;
   const author = pr.user.login;
-  const milestone = pr.milestone;
   const effortColor = getEffortColor(pr.effort);
+  const userAndRepo = window.location.pathname.split('/').slice(1, 3).join('/');
 
   const assignees = pr.assignees.map(assignee => {
     return {
@@ -48,6 +48,7 @@ function generateHtmlFromJson(pr) {
       name: label.name,
       color: label.color,
       description: label.description,
+      url: label.url,
       r: r,
       g: g,
       b: b,
@@ -94,14 +95,14 @@ function generateHtmlFromJson(pr) {
             <!-- Issue title column -->
             <div class="flex-auto min-width-0 p-2 pr-3 pr-md-2">
                 <!-- Title -->
-                <a id="issue_${issueNumber}_link" class="Link--primary v-align-middle no-underline h4 js-navigation-open markdown-title" data-hovercard-type="pull_request" data-hovercard-url="/user/repo/pull/${issueNumber}/hovercard" href="/user/repo/pull/${issueNumber}" data-turbo-frame="repo-content-turbo-frame">${title}</a>
+                <a id="issue_${issueNumber}_link" class="Link--primary v-align-middle no-underline h4 js-navigation-open markdown-title" data-hovercard-type="pull_request" data-hovercard-url="${pr.html_url}/hovercard" href="${pr.html_url}" data-turbo-frame="repo-content-turbo-frame">${title}</a>
                 <!-- BUILD STATUS -->
                 ${buildStatusHtml}
                 <!-- Labels -->
                 ${labels.length > 0 ? `
                 <span class="lh-default d-block d-md-inline">
                     ${labels.map(label => `
-                        <a id="label-${label.name}" href="/user/repo/pulls?q=is%3Apr+is%3Aopen+label%3A%22${encodeURIComponent(label.name)}%22" data-name="${label.name}" style="--label-r:${label.r};--label-g:${label.g};--label-b:${label.b};--label-h:${label.h};--label-s:${label.s};--label-l:${label.l};" data-view-component="true" class="IssueLabel hx_IssueLabel" aria-describedby="tooltip-${label.name}" data-turbo-frame="repo-content-turbo-frame">
+                        <a id="label-${label.name}" href="${label.url}" data-name="${label.name}" style="--label-r:${label.r};--label-g:${label.g};--label-b:${label.b};--label-h:${label.h};--label-s:${label.s};--label-l:${label.l};" data-view-component="true" class="IssueLabel hx_IssueLabel" aria-describedby="tooltip-${label.name}" data-turbo-frame="repo-content-turbo-frame">
                             ${label.name}
                         </a>
                         <tool-tip id="tooltip-${label.name}" for="label-${label.name}" popover="manual" data-direction="s" data-type="description" data-view-component="true" class="position-absolute sr-only" role="tooltip" style="--tool-tip-position-top: 515px; --tool-tip-position-left: 237.046875px;">
@@ -114,7 +115,7 @@ function generateHtmlFromJson(pr) {
                 <!-- Opened by -->
                     <span class="opened-by">
                         #${issueNumber} opened <relative-time datetime="${createdAt}" class="no-wrap" title="${new Date(createdAt).toLocaleString()}">${new Date(createdAt).toLocaleDateString()}</relative-time> by
-                        <a class="Link--muted" title="Open pull requests created by ${author}" data-hovercard-type="user" data-hovercard-url="/users/${author}/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="/user/repo/issues?q=is%3Apr+is%3Aopen+author%3A${author}" data-turbo-frame="repo-content-turbo-frame">${author}</a>
+                        <a class="Link--muted" title="Open pull requests created by ${author}" data-hovercard-type="user" data-hovercard-url="/users/${author}/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="/${userAndRepo}/issues?q=is%3Apr+is%3Aopen+author%3A${author}" data-turbo-frame="repo-content-turbo-frame">${author}</a>
                     </span>
                 <!-- TODO : Review Status -->
               
@@ -155,7 +156,7 @@ function generateHtmlFromJson(pr) {
                     <div class="AvatarStack AvatarStack--right ml-2 flex-1 flex-shrink-0">
                         <div class="AvatarStack-body tooltipped tooltipped-sw tooltipped-multiline tooltipped-align-right-1 mt-1" aria-label="Assigned to ${assignees.map(assignee => assignee.username).join(' and ')}">
                             ${assignees.map(assignee => `
-                            <a class="avatar avatar-user" aria-label="${assignee.username}’s assigned issues" href="/${assignee.username}/repo/pulls?q=assignee%3A${assignee.username}+is%3Aopen" data-turbo-frame="repo-content-turbo-frame">
+                            <a class="avatar avatar-user" aria-label="${assignee.username}’s assigned issues" href="/${userAndRepo}/pulls?q=assignee%3A${assignee.username}+is%3Aopen" data-turbo-frame="repo-content-turbo-frame">
                                 <img class="from-avatar avatar-user" src="${assignee.avatar_url}" width="20" height="20" alt="@${assignee.username}">
                             </a>`).join('')}
                         </div>
@@ -172,7 +173,7 @@ function generateHtmlFromJson(pr) {
                       </a>` : ''}
                 </span>
             </div>
-            <a class="d-block d-md-none position-absolute top-0 bottom-0 left-0 right-0" aria-label="${title}" href="/user/repo/pull/${issueNumber}" data-turbo-frame="repo-content-turbo-frame"></a>
+            <a class="d-block d-md-none position-absolute top-0 bottom-0 left-0 right-0" aria-label="${title}" href="/${userAndRepo}/pull/${issueNumber}" data-turbo-frame="repo-content-turbo-frame"></a>
         </div>
     </div>
     `;
