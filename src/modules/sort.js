@@ -3,6 +3,7 @@
 const JSZip = require("jszip");
 import { fetchGithubAPI, getLinkedIssueWithGraphQL } from '../background'
 import { replaceHtmlContent } from './pr-ui'
+import { setCustomPagination } from './custom-pagination'
 
 let sorted = false;
 let data;
@@ -54,6 +55,9 @@ async function sort(sort, token, repo) {
 
   if (sortedPullRequests.length != 0) {
     replaceHtmlContent(sortedPullRequests);
+    setCustomPagination((page) => {
+      changePage(page);
+    });
     sorted = true;
   } else {
     console.log('No pull requests matches.');
@@ -91,6 +95,24 @@ async function sortPullRequests(pullRequests, orderList, sort, token, repo) {
   return sort === 1 ? sortedPRs.toReversed() : sortedPRs;
 }
 
+function changePage(page) {
+  if (sortedPullRequests.length === 0) {
+    console.log('No cached pull requests available.');
+    return;
+  }
+
+  const pageSize = 25;
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+
+  const paginatedPRs = sortedPullRequests.slice(startIndex, endIndex);
+
+  if (paginatedPRs.length !== 0) {
+    replaceHtmlContent(paginatedPRs);
+  } else {
+    console.log('No pull requests found for this page.');
+  }
+}
 async function fetchPRDetails(pr, token, repo) {
   if (token) {
     try {

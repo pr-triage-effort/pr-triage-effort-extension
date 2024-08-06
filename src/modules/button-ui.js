@@ -3,7 +3,7 @@
 // Action is the function that will be called on click to order. (need to implement)
 function addSortOrderOptions(Option, Action) {
   const sortMenuEl = document.querySelector('#sort-select-menu .SelectMenu-list');
-  
+
   if (sortMenuEl) {
     const sortItemEl = sortMenuEl.querySelector('#sort-select-menu .SelectMenu-divider');
     const sortMenuNode = sortItemEl.parentNode;
