@@ -52,10 +52,11 @@ async function getLinkedIssueWithGraphQL(pullRequestNumber, token, repoURL = nul
       }
     }
   `;
-  
+
   const data = await fetchPullRequestDetails(query, token);
   return data;
 }
+
 async function fetchPullRequestDetails(query, token) {
   const response = await fetch('https://api.github.com/graphql', {
     method: 'POST',

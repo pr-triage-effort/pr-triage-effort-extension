@@ -4,6 +4,11 @@ const JSZip = require("jszip");
 import { fetchGithubAPI, getLinkedIssueWithGraphQL } from '../background'
 import { replaceHtmlContent } from './pr-ui'
 
+let sorted = false;
+let data;
+let orderList;
+let sortedPullRequests;
+
 // ORDERING
 
 async function getOrder(token, repo) {
@@ -31,25 +36,59 @@ async function getOrder(token, repo) {
 
   const prs = JSON.parse(file)
 
-  return prs.sort((a, b) => a.effort - b.effort).map((pr) => {
+  return prs.sort((a, b) => b.effort - a.effort).map((pr) => {
     return { number: pr.number, effort: pr.effort };
   });
 }
 
 async function sort(sort, token, repo) {
 
-  const data = await fetchGithubAPI('pulls?per_page=500', token);
+  if (!sorted) {
+    data = await fetchGithubAPI('pulls?per_page=500', token);
+    orderList = await getOrder(token, repo);
+  }
 
-  const orderList = await getOrder(token, repo)
+  sortedPullRequests = await sortPullRequests(data, orderList, sort, token, repo);
 
-  let sortedPullRequests = await sortPullRequests(data, orderList, sort, token, repo);
   sortedPullRequests = sortedPullRequests.slice(0, 25);
 
   if (sortedPullRequests.length != 0) {
     replaceHtmlContent(sortedPullRequests);
+    sorted = true;
   } else {
     console.log('No pull requests matches.');
   }
+}
+
+async function sortPullRequests(pullRequests, orderList, sort, token, repo) {
+  const pullRequestMap = {};
+
+  // Create a map of pull requests by their numbers
+  pullRequests.forEach(pr => {
+    pullRequestMap[pr.number] = pr;
+  });
+
+  // Sort pull requests based on the orderList
+  let sortedPRs = await Promise.all(orderList.map(async (order) => {
+    let pr = pullRequestMap[order.number]
+    if (pr) {
+      try {
+        if (!sorted) {
+          pr = await fetchPRDetails(pr, token, repo);
+        }
+        return { ...pr, effort: Number(order.effort.toFixed(3)) };
+      } catch (error) {
+        console.error(`Failed to fetch details for PR ${pr.number}:`, error);
+        return undefined;
+      }
+    } else {
+      console.warn(`No pull request found for number ${order.number}`);
+      return undefined;
+    }
+  }));
+  sortedPRs = sortedPRs.filter(pr => pr !== undefined);
+
+  return sort === 1 ? sortedPRs.toReversed() : sortedPRs;
 }
 
 async function fetchPRDetails(pr, token, repo) {
@@ -62,7 +101,7 @@ async function fetchPRDetails(pr, token, repo) {
       } else {
         pr.status = "Unknown";
       }
-      // Add details about the number of comments and reviews, wich cumulated gives the 
+      // Add details about the number of comments and reviews, wich cumulated gives the
       const reviewResult = await fetchGithubAPI(`pulls/${pr.number}/reviews`, token, repo);
       result = await fetchGithubAPI(`pulls/${pr.number}`, token, repo);
 
@@ -82,35 +121,6 @@ async function fetchPRDetails(pr, token, repo) {
     pr.status = "Unknown";
   }
   return pr;
-}
-
-async function sortPullRequests(pullRequests, orderList, sort, token, repo) {
-  const pullRequestMap = {};
-
-  // Create a map of pull requests by their numbers
-  pullRequests.forEach(pr => {
-    pullRequestMap[pr.number] = pr;
-  });
-
-  // Sort pull requests based on the orderList
-  let sortedPRs = await Promise.all(orderList.map(async (order) => {
-    let pr = pullRequestMap[order.number];
-    if (pr) {
-      try {
-        pr = await fetchPRDetails(pr, token, repo);
-        return { ...pr, effort: Number(order.effort.toFixed(3)) };
-      } catch (error) {
-        console.error(`Failed to fetch details for PR ${pr.number}:`, error);
-        return undefined;
-      }
-    } else {
-      console.warn(`No pull request found for number ${order.number}`);
-      return undefined;
-    }
-  }));
-  sortedPRs = sortedPRs.filter(pr => pr !== undefined);
-
-  return sort === 1 ? sortedPRs.reverse() : sortedPRs;
 }
 
 export { sort };

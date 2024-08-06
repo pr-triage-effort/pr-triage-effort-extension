@@ -18,11 +18,11 @@ function replaceHtmlContent(pullRequests) {
 
 function getEffortColor(effort) {
   if (effort > 0.75) {
-    return 'green';
+    return '#47e45150';
   } else if (effort > 0.25) {
-    return 'yellow';
+    return '#ff971a50';
   } else {
-    return 'red';
+    return '#ff2a2a50';
   }
 }
 
@@ -118,8 +118,7 @@ function generateHtmlFromJson(pr) {
                         <a class="Link--muted" title="Open pull requests created by ${author}" data-hovercard-type="user" data-hovercard-url="/users/${author}/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self" href="/${userAndRepo}/issues?q=is%3Apr+is%3Aopen+author%3A${author}" data-turbo-frame="repo-content-turbo-frame">${author}</a>
                     </span>
                 <!-- TODO : Review Status -->
-              
-                 <!-- Milestone -->
+                <!-- Milestone -->
                     ${pr.milestone != null ? `
                     <span class="issue-meta-section css-truncate issue-milestone ml-2 d-none d-md-inline">
                         <a class="milestone-link Link--muted css-truncate tooltipped tooltipped-n" aria-label="${pr.milestone.title}" href="${pr.milestone.html_url}" data-turbo-frame="repo-content-turbo-frame">
@@ -132,8 +131,8 @@ function generateHtmlFromJson(pr) {
                         </a>
                     </span>` : ''}
                     <!-- Efforts -->
-                    <span class="d-none d-md-inline-flex ml-2">
-                        Review priority : <span style="color:${effortColor};"> ${pr.effort} </span>
+                    <span class="d-none d-md-inline-flex ml-2 pl-2" style="border-left: var(--borderWidth-thin) solid var(--borderColor-muted);">
+                        Review priority : <span class="ml-1 pl-1 pr-1" style="color: var(--fgColor-muted); font-weight: var(--base-text-weight-medium, 500); border-radius: var(--borderRadius-small); background: ${effortColor};"> ${pr.effort} </span>
                     </span>
                 </div>
             </div>
