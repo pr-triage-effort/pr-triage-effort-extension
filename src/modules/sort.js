@@ -14,6 +14,65 @@ let sortedPullRequests;
 let _token;
 let _repo;
 
+// sort the pull requests based on the order list, fetch more details about them and display them.
+async function sort(sort) {
+  // Get the token and the repo from the storage
+  _token = await new Promise((resolve) => {
+    infoStorage.get('token', (token) => {
+      resolve(token);
+    });
+  });
+
+  _repo = await new Promise((resolve) => {
+    infoStorage.get('repo', (repo) => {
+      resolve(repo);
+    });
+  });
+  // If the data has already been sorted, we don't need to fetch it again
+  // Otherwise, get all pull requests and the order list
+  if (!sorted) {
+    data = await fetchGithubAPI('pulls?per_page=500', _token);
+    orderList = await getOrder();
+  }
+
+  // Sort the pull requests based on the order list and the type of sort desired
+  sortedPullRequests = await sortPullRequests(data, orderList, sort);
+
+  let paginatedPRs = sortedPullRequests.slice(0, 25);
+
+  // If there are pull requests to display, show them and set the custom pagination
+  if (paginatedPRs.length != 0) {
+    getPRDetailsAndShowThem(paginatedPRs);
+    setCustomPagination((page) => {
+      changePage(page);
+    });
+    sorted = true;
+  } else {
+    console.log('No pull requests matches.');
+  }
+}
+
+// Change the displayed pull requests based on the page
+function changePage(page) {
+  if (sortedPullRequests.length === 0) {
+    console.log('No cached pull requests available.');
+    return;
+  }
+
+  const pageSize = 25;
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+
+  const paginatedPRs = sortedPullRequests.slice(startIndex, endIndex);
+
+  if (paginatedPRs.length !== 0) {
+    getPRDetailsAndShowThem(paginatedPRs);
+  } else {
+    console.log('No pull requests found for this page.');
+  }
+}
+
+// Get the order list from the artifacts. The artifact is obtained after the Github Action has run.
 async function getOrder() {
   const data = await fetchGithubAPI('actions/artifacts', _token, _repo);
 
@@ -42,39 +101,7 @@ async function getOrder() {
   });
 }
 
-async function sort(sort) {
-  _token = await new Promise((resolve) => {
-    infoStorage.get('token', (token) => {
-      resolve(token);
-    });
-  });
-
-  _repo = await new Promise((resolve) => {
-    infoStorage.get('repo', (repo) => {
-      resolve(repo);
-    });
-  });
-
-  if (!sorted) {
-    data = await fetchGithubAPI('pulls?per_page=500', _token);
-    orderList = await getOrder();
-  }
-
-  sortedPullRequests = await sortPullRequests(data, orderList, sort);
-
-  sortedPullRequests = sortedPullRequests.slice(0, 25);
-
-  if (sortedPullRequests.length != 0) {
-    replaceHtmlContent(sortedPullRequests);
-    setCustomPagination((page) => {
-      changePage(page);
-    });
-    sorted = true;
-  } else {
-    console.log('No pull requests matches.');
-  }
-}
-
+// Sort the pull requests based on the order list and the type of sort desired
 async function sortPullRequests(pullRequests, orderList, sort) {
   const pullRequestMap = {};
 
@@ -86,16 +113,8 @@ async function sortPullRequests(pullRequests, orderList, sort) {
   // Sort pull requests based on the orderList
   let sortedPRs = await Promise.all(orderList.map(async (order) => {
     let pr = pullRequestMap[order.number]
-    if (pr) {
-      try {
-        if (!sorted) {
-          pr = await fetchPRDetails(pr);
-        }
-        return { ...pr, effort: Number(order.effort.toFixed(3)) };
-      } catch (error) {
-        console.error(`Failed to fetch details for PR ${pr.number}:`, error);
-        return undefined;
-      }
+    if (pr) {        
+      return { ...pr, effort: Number(order.effort.toFixed(3)) };
     } else {
       console.warn(`No pull request found for number ${order.number}`);
       return undefined;
@@ -106,24 +125,24 @@ async function sortPullRequests(pullRequests, orderList, sort) {
   return sort === 1 ? sortedPRs.toReversed() : sortedPRs;
 }
 
-function changePage(page) {
-  if (sortedPullRequests.length === 0) {
-    console.log('No cached pull requests available.');
-    return;
+async function getPRDetailsAndShowThem(sortedPullRequests) {
+  //For each pull requests, fetch details
+  for (const pr of sortedPullRequests) {
+    try {
+      if (!sorted) {
+        await fetchPRDetails(pr);
+      }
+    } catch (error) {
+      console.error(`Failed to fetch details for PR ${pr.number}:`, error);
+      continue;
+    }
   }
 
-  const pageSize = 25;
-  const startIndex = (page - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
+  // Replace the actual content by the newest one
+  replaceHtmlContent(sortedPullRequests);
 
-  const paginatedPRs = sortedPullRequests.slice(startIndex, endIndex);
-
-  if (paginatedPRs.length !== 0) {
-    replaceHtmlContent(paginatedPRs);
-  } else {
-    console.log('No pull requests found for this page.');
-  }
 }
+
 async function fetchPRDetails(pr) {
   if (_token) {
     try {
