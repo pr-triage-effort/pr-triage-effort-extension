@@ -15,17 +15,20 @@ import { addSortOrderOptions } from './modules/button-ui'
 
 let token = null;
 let repo = null;
+let greenPriority = null;
+let yellowPriority = null;
+
 
 // Listen for message
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'TOKEN') {
     token = request.payload.token;
-    //console.log(`Current token is ${token}`);
-  }
-
-  if (request.type === 'REPO') {
+  } else if (request.type === 'REPO') {
     repo = request.payload.repo;
-    //console.log(`Current repo is ${repo}`);
+  } else if (request.type === 'GREEN_PRIORITY') {
+    greenPriority = request.payload.repo;
+  } else if (request.type === 'YELLOW_PRIORITY') {
+    yellowPriority = request.payload.repo;
   }
 
   // Send an empty response
@@ -42,10 +45,10 @@ const observer = new MutationObserver(function (mutationsList, observer) {
   if (pattern.test(currentUrl)) {
     if (!document.querySelector('#sort-select-menu .highest-effort')) {
       addSortOrderOptions('Highest effort', async () => {
-        await sort(1, token, repo);
+        await sort(1);
       });
       addSortOrderOptions('Lowest effort', async () => {
-        await sort(0, token, repo);
+        await sort(0);
       });
     }
   }

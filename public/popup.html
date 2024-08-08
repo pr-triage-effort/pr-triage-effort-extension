@@ -15,12 +15,11 @@
         <label for="userToken" class="form-label">Personal access token</label>
         <div class="input-group">
           <input type="password" id="userToken" name="userToken" class="form-input" placeholder="Personal access token"
-            autofocus pattern="ghp_[a-zA-Z0-9]{36}"
-            title="Token must start with 'ghp_' followed by 36 alphanumeric characters" />
+                 autofocus pattern="ghp_[a-zA-Z0-9]{36}"
+                 title="Token must start with 'ghp_' followed by 36 alphanumeric characters" />
           <button type="button" id="btnShowToken" class="button">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-              <path
-                d="M8 2c1.981 0 3.671.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62 1.62 0 0 1 0 1.798c-.45.678-1.367 1.932-2.637 3.023C11.67 13.008 9.981 14 8 14c-1.981 0-3.671-.992-4.933-2.078C1.797 10.83.88 9.576.43 8.898a1.62 1.62 0 0 1 0-1.798c.45-.677 1.367-1.931 2.637-3.022C4.33 2.992 6.019 2 8 2ZM1.679 7.932a.12.12 0 0 0 0 .136c.411.622 1.241 1.75 2.366 2.717C5.176 11.758 6.527 12.5 8 12.5c1.473 0 2.825-.742 3.955-1.715 1.124-.967 1.954-2.096 2.366-2.717a.12.12 0 0 0 0-.136c-.412-.621-1.242-1.75-2.366-2.717C10.824 4.242 9.473 3.5 8 3.5c-1.473 0-2.825.742-3.955 1.715-1.124.967-1.954 2.096-2.366 2.717ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z">
+              <path d="M8 2c1.981 0 3.671.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62 1.62 0 0 1 0 1.798c-.45.678-1.367 1.932-2.637 3.023C11.67 13.008 9.981 14 8 14c-1.981 0-3.671-.992-4.933-2.078C1.797 10.83.88 9.576.43 8.898a1.62 1.62 0 0 1 0-1.798c.45-.677 1.367-1.931 2.637-3.022C4.33 2.992 6.019 2 8 2ZM1.679 7.932a.12.12 0 0 0 0 .136c.411.622 1.241 1.75 2.366 2.717C5.176 11.758 6.527 12.5 8 12.5c1.473 0 2.825-.742 3.955-1.715 1.124-.967 1.954-2.096 2.366-2.717a.12.12 0 0 0 0-.136c-.412-.621-1.242-1.75-2.366-2.717C10.824 4.242 9.473 3.5 8 3.5c-1.473 0-2.825.742-3.955 1.715-1.124.967-1.954 2.096-2.366 2.717ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z">
               </path>
           </button>
         </div>
@@ -29,9 +28,24 @@
       <fieldset>
         <label for="userRepo" class="form-label">URL of the repository containing the action</label>
         <input type="url" id="userRepo" name="userRepo" class="form-input" placeholder="Repository URL"
-          pattern="https://github\.com/.+/.+" title="URL format: 'https://github.com/:owner/:repo'">
+               pattern="https://github\.com/.+/.+" title="URL format: 'https://github.com/:owner/:repo'">
         <span class="tooltip">Enter the URL of your action repository</span>
       </fieldset>
+
+      <!-- Separator line -->
+      <hr>
+
+      <!-- Numerical outputs with default values and labels -->
+      <fieldset>
+        <label for="greenPriority" class="form-label mt-5">Minimum green priority score</label>
+        <input type="number" id="greenPriority" name="greenPriority" class="form-input" value="0.75" step="0.01" min="0" max="1">
+      </fieldset>
+      <fieldset>
+        <label for="yellowPriority" class="form-label">Minimum yellow priority score</label>
+        <input type="number" id="yellowPriority" name="yellowPriority" class="form-input" value="0.25" step="0.01" min="0" max="1">
+      </fieldset>
+      <p class="subtle-note">Past the yellow score, it will be red.</p>
+
       <button type="submit" id="saveForm" class="button">Save</button>
     </form>
   </div>
