@@ -1,25 +1,46 @@
 import { hexToRgb, rgbToHsl } from './color-utils'
+import { infoStorage } from '../storage';
+
+let _greenPriority = null;
+let _yellowPriority = null;
 
 function replaceHtmlContent(pullRequests) {
-  const xpathResult = document.evaluate("//*[contains(@aria-label, 'Issues') and contains(@role, 'group')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-  const container = xpathResult.singleNodeValue;
 
-  if (container) {
-    container.innerHTML = '';
+  Promise.all([
+    new Promise((resolve) => {
+      infoStorage.get('greenPriority', (greenPriority) => {
+        _greenPriority = greenPriority;
+        resolve();
+      });
+    }),
+    new Promise((resolve) => {
+      infoStorage.get('yellowPriority', (yellowPriority) => {
+        _yellowPriority = yellowPriority;
+        resolve();
+      });
+    })
+  ]).then(() => {
 
-    pullRequests.forEach(pr => {
-      const prHtml = generateHtmlFromJson(pr);
-      container.insertAdjacentHTML('beforeend', prHtml);
-    });
-  } else {
-    console.log("Container element not found");
-  }
+    const xpathResult = document.evaluate("//*[contains(@aria-label, 'Issues') and contains(@role, 'group')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+    const container = xpathResult.singleNodeValue;
+
+    if (container) {
+      container.innerHTML = '';
+
+      pullRequests.forEach(pr => {
+        const prHtml = generateHtmlFromJson(pr);
+        container.insertAdjacentHTML('beforeend', prHtml);
+      });
+    } else {
+      console.log("Container element not found");
+    }
+  });
 }
 
 function getEffortColor(effort) {
-  if (effort > 0.75) {
+  if (effort > _greenPriority) {
     return '#47e45150';
-  } else if (effort > 0.25) {
+  } else if (effort > _yellowPriority) {
     return '#ff971a50';
   } else {
     return '#ff2a2a50';

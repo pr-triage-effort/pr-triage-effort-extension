@@ -62,7 +62,7 @@ html {
 
 body {
   width: 350px;
-  height: 300px;
+  height: 450px;
   padding: 20px;
 }
 
@@ -230,4 +230,11 @@ fieldset .tooltip::after {
 fieldset:hover .tooltip {
   visibility: visible;
   opacity: 1;
+}
+
+.subtle-note {
+  font-size: 0.8em;
+  color: #666; /* Light gray color */
+  margin-top: -10px; /* Adjust the margin as needed */
+  margin-bottom: 10px; /* Adjust the margin as needed */
 }

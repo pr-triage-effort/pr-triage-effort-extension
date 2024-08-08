@@ -4,18 +4,20 @@ const JSZip = require("jszip");
 import { fetchGithubAPI, getLinkedIssueWithGraphQL } from '../background'
 import { replaceHtmlContent } from './pr-ui'
 import { setCustomPagination } from './custom-pagination'
+import { infoStorage } from '../storage';
 
 let sorted = false;
 let data;
 let orderList;
 let sortedPullRequests;
 
-// ORDERING
+let _token;
+let _repo;
 
-async function getOrder(token, repo) {
-  const data = await fetchGithubAPI('actions/artifacts', token, repo);
+async function getOrder() {
+  const data = await fetchGithubAPI('actions/artifacts', _token, _repo);
 
-  const file = await fetchGithubAPI(data.artifacts[0].archive_download_url, token)
+  const file = await fetchGithubAPI(data.artifacts[0].archive_download_url, _token)
     .then((response) => {
       if (response.status === 200 || response.status === 0) {
         return Promise.resolve(response.blob());
@@ -28,10 +30,8 @@ async function getOrder(token, repo) {
       return zip.file("results.json").async("string");
     })
     .then(function success(text) {
-      console.log('success');
       return text;
     }, function error(e) {
-      console.log('error');
       return e;
     });
 
@@ -42,14 +42,25 @@ async function getOrder(token, repo) {
   });
 }
 
-async function sort(sort, token, repo) {
+async function sort(sort) {
+  _token = await new Promise((resolve) => {
+    infoStorage.get('token', (token) => {
+      resolve(token);
+    });
+  });
+
+  _repo = await new Promise((resolve) => {
+    infoStorage.get('repo', (repo) => {
+      resolve(repo);
+    });
+  });
 
   if (!sorted) {
-    data = await fetchGithubAPI('pulls?per_page=500', token);
-    orderList = await getOrder(token, repo);
+    data = await fetchGithubAPI('pulls?per_page=500', _token);
+    orderList = await getOrder();
   }
 
-  sortedPullRequests = await sortPullRequests(data, orderList, sort, token, repo);
+  sortedPullRequests = await sortPullRequests(data, orderList, sort);
 
   sortedPullRequests = sortedPullRequests.slice(0, 25);
 
@@ -64,7 +75,7 @@ async function sort(sort, token, repo) {
   }
 }
 
-async function sortPullRequests(pullRequests, orderList, sort, token, repo) {
+async function sortPullRequests(pullRequests, orderList, sort) {
   const pullRequestMap = {};
 
   // Create a map of pull requests by their numbers
@@ -78,7 +89,7 @@ async function sortPullRequests(pullRequests, orderList, sort, token, repo) {
     if (pr) {
       try {
         if (!sorted) {
-          pr = await fetchPRDetails(pr, token, repo);
+          pr = await fetchPRDetails(pr);
         }
         return { ...pr, effort: Number(order.effort.toFixed(3)) };
       } catch (error) {
@@ -113,26 +124,26 @@ function changePage(page) {
     console.log('No pull requests found for this page.');
   }
 }
-async function fetchPRDetails(pr, token, repo) {
-  if (token) {
+async function fetchPRDetails(pr) {
+  if (_token) {
     try {
       // Add details about the status of the PR for the check
-      let result = await fetchGithubAPI(`commits/${pr.head.sha}/check-suites`, token, repo);
+      let result = await fetchGithubAPI(`commits/${pr.head.sha}/check-suites`, _token, _repo);
       if (result.total_count > 0 && result.check_suites[0].conclusion) {
         pr.status = result.check_suites[0].conclusion;
       } else {
         pr.status = "Unknown";
       }
       // Add details about the number of comments and reviews, wich cumulated gives the
-      const reviewResult = await fetchGithubAPI(`pulls/${pr.number}/reviews`, token, repo);
-      result = await fetchGithubAPI(`pulls/${pr.number}`, token, repo);
+      const reviewResult = await fetchGithubAPI(`pulls/${pr.number}/reviews`, _token, _repo);
+      result = await fetchGithubAPI(`pulls/${pr.number}`, _token, _repo);
 
       const comments = result.comments;
 
       pr.comments = reviewResult.filter(review => !(review.state === "APPROVED" && review.body === "")).length + Number(comments);
 
       // Add details about the linked issue
-      result = await getLinkedIssueWithGraphQL(pr.number, token, repo);
+      result = await getLinkedIssueWithGraphQL(pr.number, _token, _repo);
       pr.linkedIssue = result.data.repository.pullRequest.closingIssuesReferences.nodes.length;
 
     } catch (error) {

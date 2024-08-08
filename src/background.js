@@ -8,7 +8,6 @@
 async function fetchGithubAPI(req, token = null, repoURL = null) {
   const repoParam = repoURL ? new URL(repoURL).pathname : null;
   const repo = (((repoParam && req.includes('actions')) ? repoParam : window.location.pathname)).split('/').slice(1, 3).join('/');
-  //console.log(repo);
 
   const url = req.includes('zip') ? req : `https://api.github.com/repos/${repo}/${req}`;
 
@@ -28,7 +27,6 @@ async function fetchGithubAPI(req, token = null, repoURL = null) {
     }
 
     const data = req.includes('zip') ? response : response.json();
-    //console.log(data);
     return data;
   } catch (error) {
     console.error('Failed to fetch pull requests:', error);
