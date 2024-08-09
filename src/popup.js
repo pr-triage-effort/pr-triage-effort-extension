@@ -160,10 +160,31 @@ import { infoStorage } from './storage';
         greenPriority: greenPriorityEl.value,
         yellowPriority: yellowPriorityEl.value,
       });
-      alert("Information saved successfully");
+      // alert("Information saved successfully");
     });
-  }
+  };
 
   document.addEventListener('DOMContentLoaded', restoreInfo);
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const button = document.getElementById("saveForm");
+
+    button.addEventListener("click", function () {
+      validate();
+    });
+
+    function validate() {
+      setTimeout(function () {
+        button.classList.add("validate");
+        setTimeout(callback, 450);
+      }, 250);
+    }
+
+    function callback() {
+      setTimeout(function () {
+        button.classList.remove("validate");
+      }, 750);
+    }
+  })
 
 })();
