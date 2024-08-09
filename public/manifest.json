@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Pr Triage Effort Extension",
-  "version": "0.1.0",
+  "name": "PR Triage Effort Extension",
+  "version": "1.0.0",
   "description": "Allows GitHub users to sort PRs by effort values. Requires a GitHub Action. Created as an end-of-study project.",
   "icons": {
     "16": "icons/icon_16.png",
