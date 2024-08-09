@@ -13,20 +13,22 @@ import { addSortOrderOptions } from './modules/button-ui'
 // For more information on Content Scripts,
 // See https://developer.chrome.com/extensions/content_scripts
 
-
 let token = null;
 let repo = null;
+let greenPriority = null;
+let yellowPriority = null;
+
 
 // Listen for message
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'TOKEN') {
     token = request.payload.token;
-    //console.log(`Current token is ${token}`);
-  }
-
-  if (request.type === 'REPO') {
+  } else if (request.type === 'REPO') {
     repo = request.payload.repo;
-    //console.log(`Current repo is ${repo}`);
+  } else if (request.type === 'GREEN_PRIORITY') {
+    greenPriority = request.payload.repo;
+  } else if (request.type === 'YELLOW_PRIORITY') {
+    yellowPriority = request.payload.repo;
   }
 
   // Send an empty response
@@ -35,13 +37,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
+const pattern = /^https:\/\/github\.com\/[^\/]+\/[^\/]+\/pulls.*/;
 
 // UI
+const observer = new MutationObserver(function (mutationsList, observer) {
+  let currentUrl = window.location.href;
+  if (pattern.test(currentUrl)) {
+    if (!document.querySelector('#sort-select-menu .highest-effort')) {
+      addSortOrderOptions('Highest effort', async () => {
+        await sort(1);
+      });
+      addSortOrderOptions('Lowest effort', async () => {
+        await sort(0);
+      });
+    }
+  }
+})
 
-
-addSortOrderOptions('Highest effort', async () => {
-  await sort(1, token, repo);
-});
-addSortOrderOptions('Lowest effort', async () => {
-  await sort(0, token, repo);
-});
+const target = document.querySelector('#repo-content-turbo-frame');
+const config = { attributes: true, childList: true, subtree: true };
+observer.observe(target, config);

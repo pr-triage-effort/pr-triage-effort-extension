@@ -14,7 +14,7 @@ We do not collect usage data. Our extension only stores the following informatio
 ## Data Usage
 
 - **Personal Access Token**: Used to authenticate with GitHub to access the necessary resources for sorting and prioritizing pull requests.
-- **Repository Variable**: Used to specify the repository that the user wants to manage.
+- **Repository Variable**: Used to overwrite the default repository the extension obtains the GitHub Actions Artifact from (if the analysis was performed outside of the targetted repository). 
 
 ## Data Protection
 

@@ -1,6 +1,7 @@
 'use strict';
 
 import './popup.css';
+import { infoStorage } from './storage';
 
 (function () {
   document.getElementById('btnShowToken').addEventListener('mousedown', (event) => {
@@ -17,54 +18,35 @@ import './popup.css';
   // To get storage access, we have to mention it in `permissions` property of manifest.json file
   // More information on Permissions can we found at
   // https://developer.chrome.com/extensions/declare_permissions
-
-  const infoStorage = {
-    get: (key, cb) => {
-      chrome.storage.sync.get([key], (result) => {
-        cb(result[key]);
-      });
-    },
-    set: (key, value, cb) => {
-      chrome.storage.sync.set(
-        {
-          [key]: value
-        },
-        () => {
-          cb();
-        }
-      );
-    },
-  };
-
-
   function setupInfo(type, value) {
     const tokenEl = document.getElementById('userToken');
     const repoEl = document.getElementById('userRepo');
+    const greenPriorityEl = document.getElementById('greenPriority');
+    const yellowPriorityEl = document.getElementById('yellowPriority');
 
     if (type === 'TOKEN') {
       tokenEl.value = value;
-    } else {
+    } else if (type === 'REPO') {
       repoEl.value = value;
+    } else if (type === 'GREEN_PRIORITY' && value !== null && value !== undefined) {
+      greenPriorityEl.value = value;
+    } else if (type === 'YELLOW_PRIORITY' && value !== null && value !== undefined) {
+      yellowPriorityEl.value = value;
+    } else {
+      console.log("Unsupported type " + type + " with value " + value);
     }
-
-    //console.log("type: " + type);
-    //console.log("value: " + value)
   }
 
-  function updateInfo({ token, repo }) {
+
+  function updateInfo({ token, repo, greenPriority, yellowPriority }) {
     infoStorage.set('token', token, () => {
-      // Communicate with content script of
-      // active tab by sending a message
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs[0];
-
         chrome.tabs.sendMessage(
           tab.id,
           {
             type: 'TOKEN',
-            payload: {
-              token: token,
-            },
+            payload: { token: token },
           },
           (response) => {
             console.log('Current token value passed to contentScript file');
@@ -74,27 +56,52 @@ import './popup.css';
     });
 
     infoStorage.set('repo', repo, () => {
-      // Communicate with content script of
-      // active tab by sending a message
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs[0];
-
         chrome.tabs.sendMessage(
           tab.id,
           {
             type: 'REPO',
-            payload: {
-              repo: repo,
-            },
+            payload: { repo: repo },
           },
           (response) => {
-            console.log('Current token value passed to contentScript file');
+            console.log('Current repo value passed to contentScript file');
           }
         );
       });
     });
 
-    //console.log(token + ' // ' + repo);
+    infoStorage.set('greenPriority', greenPriority, () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs[0];
+        chrome.tabs.sendMessage(
+          tab.id,
+          {
+            type: 'GREEN_PRIORITY',
+            payload: { greenPriority: greenPriority },
+          },
+          (response) => {
+            console.log('Current greenPriority value passed to contentScript file');
+          }
+        );
+      });
+    });
+
+    infoStorage.set('yellowPriority', yellowPriority, () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs[0];
+        chrome.tabs.sendMessage(
+          tab.id,
+          {
+            type: 'YELLOW_PRIORITY',
+            payload: { yellowPriority: yellowPriority },
+          },
+          (response) => {
+            console.log('Current yellowPriority value passed to contentScript file');
+          }
+        );
+      });
+    });
   }
 
   function restoreInfo() {
@@ -120,14 +127,64 @@ import './popup.css';
       }
     });
 
+    infoStorage.get('greenPriority', (greenPriority) => {
+      if (typeof greenPriority === 'undefined') {
+        infoStorage.set('greenPriority', null, () => {
+          setupInfo('GREEN_PRIORITY', null);
+        });
+      } else {
+        setupInfo('GREEN_PRIORITY', greenPriority);
+      }
+    });
+
+    infoStorage.get('yellowPriority', (yellowPriority) => {
+      if (typeof yellowPriority === 'undefined') {
+        infoStorage.set('yellowPriority', null, () => {
+          setupInfo('YELLOW_PRIORITY', null);
+        });
+      } else {
+        setupInfo('YELLOW_PRIORITY', yellowPriority);
+      }
+    });
+
     document.getElementById('userForm').addEventListener('submit', (event) => {
+      event.preventDefault(); // Prevent form submission
       const tokenEl = document.getElementById('userToken');
       const repoEl = document.getElementById('userRepo');
+      const greenPriorityEl = document.getElementById('greenPriority');
+      const yellowPriorityEl = document.getElementById('yellowPriority');
 
-      updateInfo({ token: tokenEl.value, repo: repoEl.value });
+      updateInfo({
+        token: tokenEl.value,
+        repo: repoEl.value,
+        greenPriority: greenPriorityEl.value,
+        yellowPriority: yellowPriorityEl.value,
+      });
+      // alert("Information saved successfully");
     });
-  }
+  };
 
   document.addEventListener('DOMContentLoaded', restoreInfo);
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const button = document.getElementById("saveForm");
+
+    button.addEventListener("click", function () {
+      validate();
+    });
+
+    function validate() {
+      setTimeout(function () {
+        button.classList.add("validate");
+        setTimeout(callback, 450);
+      }, 250);
+    }
+
+    function callback() {
+      setTimeout(function () {
+        button.classList.remove("validate");
+      }, 750);
+    }
+  })
 
 })();

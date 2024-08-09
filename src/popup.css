@@ -45,6 +45,9 @@
   --h5-size: 0.875rem;
   --control-fgColor-placeholder: #858e98;
   --overlay-bgColor: #161b22;
+
+  --button-primary-bgColor-rest: #238636;
+  --borderColor-muted: #30363db3;
 }
 /* css variables ends */
 
@@ -62,8 +65,7 @@ html {
 
 body {
   width: 350px;
-  height: 300px;
-  padding: 20px;
+  padding: 25px 20px;
 }
 
 .app, form {
@@ -200,7 +202,7 @@ input:-webkit-autofill:focus {
 
 fieldset .tooltip {
   visibility: hidden;
-  width: 120px;
+  width: 150px;
   background-color: var(--overlay-bgColor);
   text-align: center;
   padding: 5px;
@@ -230,4 +232,39 @@ fieldset .tooltip::after {
 fieldset:hover .tooltip {
   visibility: visible;
   opacity: 1;
+}
+
+fieldset.separator {
+  border-top: 1px solid var(--borderColor-muted);
+  margin-top: 8px;
+  padding-top: 15px;
+}
+
+/* Save button animation */
+
+.container {
+  position: relative;
+  text-align: center;
+  margin-top: 5px;
+}
+
+.button[type=submit] {
+  outline: none;
+  height: 40px;
+  width: 100%;
+  transition: background 0.2s ease-out;
+}
+
+.button[type=submit]:after {
+  content: "Save";
+}
+
+.button[type=submit].validate {
+  font-size: 18px;
+  color: var(--fgColor-default);
+  background: var(--button-primary-bgColor-rest);
+}
+
+.button[type=submit].validate:after {
+  content: "✔";
 }
